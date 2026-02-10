@@ -1,7 +1,11 @@
 version: "3"
 services:
   backend:
-
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: aslikeme/backend:latest
+    restart: unless-stopped
     depends_on:
       - database
     ports:
@@ -11,7 +15,12 @@ services:
       - frontend_network
 
   frontend:
-
+    
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: aslikeme/frontend:latest
+    restart: unless-stopped
     depends_on:
       - database
     ports:
@@ -20,10 +29,18 @@ services:
       - frontend_network
 
   database:
+
+    build:
+      context: ./database
+      dockerfile: Dockerfile
+    image: aslikeme/database:latest
+    restart: unless-stopped
     ports:
       - ${DB_port}:5432
     networks:
       - backend_network
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
 networks:
   backend_network:
