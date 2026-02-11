@@ -4,10 +4,18 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    image: aslikeme/backend:latest
+    container_name: backend
     restart: unless-stopped
+    environment:
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: ${DB_HOST}
+      DB_NAME: ${DB_NAME}
+      DB_PORT: 5432
+      NODE_ENV: ${NODE_ENV}
     depends_on:
-      - database
+      database:
+        condition: service_healthy
     ports:
       - ${Back_port}:3001
     networks:
@@ -15,39 +23,48 @@ services:
       - frontend_network
 
   frontend:
-    
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    image: aslikeme/frontend:latest
+    container_name: frontend
     restart: unless-stopped
     depends_on:
-      - database
+      - backend
     ports:
       - ${Front_port}:3000  
     networks:
       - frontend_network
 
   database:
-
     build:
       context: ./database
       dockerfile: Dockerfile
-    image: aslikeme/database:latest
+    container_name: database 
     restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+      DB_HOST: ${DB_HOST}
     ports:
-      - ${DB_port}:5432
+      ${DB_port}: 5432
     networks:
       - backend_network
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 networks:
   backend_network:
     driver: bridge
-  
+    name: backend_network
   frontend_network:  
     driver: bridge
-
+    name: frontend_network
+    
 volumes:
   postgres_data:

@@ -1,3 +1,6 @@
-FROM: postgresql:alpine
-
-EXPOSE: 5432
+FROM postgresql:15-alpine
+ENV POSTGRES_DB=${DB_NAME}
+ENV POSTGRES_USER=${DB_USER}
+ENV POSTGRES_PASSWORD=${DB_PASSWORD}
+COPY ./init.sql /docker-entrypoint-initdb.d/
+EXPOSE 5432
